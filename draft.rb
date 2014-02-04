@@ -1,26 +1,39 @@
 require_relative "player"
-require 'open-uri'
+require 'csv'
 
 class Draft
   attr_reader :rounds
   attr_accessor :board
 
-  def initialize(rounds, url)
+  def initialize(rounds, filename)
     @rounds = rounds
-    @board = set_board(url)
+    @board = set_board(filename)
   end
 
-  def highest_available(allowed_positions)
-    drafted = nil
-    board.each do |player|
-      if allowed_positions.size == 0 || allowed_positions.include?(player.position) || can_draft_as_flex?(player)
-        drafted = player
-        break
-      end
-    end
-    remove(drafted)
-    drafted
-  end
+  # def highest_available(member, round, scoring_leaders)
+  #   drafted = nil
+  #   if member.smart
+
+  #   else
+
+  #   end
+  #   board.each do |player|
+  #     if round <= 9
+  #       if member.checklist.size == 0 || member.checklist.include?(player.position) || can_draft_as_flex?(player)
+  #         drafted = player
+  #         break
+  #       end
+  #     else
+  #       if member.checklist.size == 0 || member.checklist.include?(player.position)
+  #         drafted = player
+  #         break
+  #       end
+  #     end
+  #   end
+  #   scoring_leaders.remove(drafted)
+  #   remove(drafted)
+  #   drafted
+  # end
 
   private
 
@@ -37,32 +50,11 @@ class Draft
     board.delete_if { |player| player == drafted}
   end
 
-  def fetch_data(url)
-    Nokogiri::HTML(open(url)).css("table tr.last")
-  end
-
-  def set_board(url)
-    page = fetch_data(url)
-    results = page.map do |data|
-      data.text.split("\t").delete_if(&:empty?)
+  def set_board(filename)
+    list = []
+    CSV.foreach(filename) do |row|
+      list << Player.new(name: row[0], team: row[1], position: row[2])
     end
-    results.map do |r|
-      Player.new({
-                  overall_rank: r[0].to_i,
-                  name: r[1].split(",").first.strip,
-                  team: r[1].split(",").last.strip,
-                  bye: r[2].to_i,
-                  position: filter_pos(r[3]),
-                  position_rank: filter_pos_rank(r[3])
-                })
-    end
-  end
-
-  def filter_pos(string)
-    string.match(/(\D+)/).captures.first
-  end
-
-  def filter_pos_rank(string)
-    string.match(/(\d+)/).captures.first.to_i
+    list
   end
 end

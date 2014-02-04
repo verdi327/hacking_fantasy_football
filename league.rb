@@ -17,12 +17,13 @@ class League
 end
 
 class Member
-  attr_accessor :roster, :order, :checklist
+  attr_accessor :roster, :order, :checklist, :smart
 
-  def initialize(order)
+  def initialize(order, smart=false)
     @roster = []
     @order = order
     @checklist = ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "DEF", "K"]
+    @smart = smart
   end
 
   def choose(player)
