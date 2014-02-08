@@ -1,16 +1,34 @@
 class League
   attr_reader :members
 
-  def initialize(member_count)
-    @members = register_members(member_count)
+  def initialize(member_count, smart_position)
+    @members = register_members(member_count, smart_position)
+  end
+
+  def scoreboard
+    members.sort_by {|member| -member.total_points}.each do |member|
+      puts "[Member #{member.order}: #{member.total_points} total points]"
+      puts member.roster.map {|p| "#{p.position} - #{p.name} - #{p.score}pts" }
+      puts ""
+    end
+  end
+
+  def winner
+    winner = members.sort_by {|member| -member.total_points}.first
+    puts "[Member #{winner.order}: #{winner.total_points} total points]"
+    puts winner.roster.map {|p| "#{p.position} - #{p.name} - #{p.score}pts" }
   end
 
   private
 
-  def register_members(member_count)
+  def register_members(member_count, smart_position)
     results = []
     (1..member_count).to_a.each do |order|
-      results << Member.new(order)
+      if order == smart_position
+        results << Member.new(order, true)
+      else
+        results << Member.new(order)
+      end
     end
     results
   end
@@ -37,6 +55,10 @@ class Member
       h[p] += 1
     end
     h["QB"] >= 1 && h["RB"] >= 2 && h["WR"] >= 2 && h["TE"] >= 1 && h["DEF"] >= 1 && h["K"] >= 1
+  end
+
+  def total_points
+    roster.inject(0) {|total, player| total += player.score}
   end
 
   private
